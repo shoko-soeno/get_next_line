@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 17:54:53 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/01 18:35:23 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/01 20:42:29 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,7 +223,10 @@ char	*get_next_line(int fd)
 	return (next_line);
 }
 
-
+// __attribute__((destructor)) static void destructor()
+// {
+//     system("leaks -q a.out");
+// }
 // int	main(void)
 // {
 // 	char	*line;

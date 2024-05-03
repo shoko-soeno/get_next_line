@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 19:16:13 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/04/30 16:17:41 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/02 11:33:16 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,20 +119,23 @@ char	*ft_strdup(const char *src)
 
 char	*ft_strndup(const char *src, size_t n)
 {
-	size_t	i;
+	size_t	len;
+	size_t	alloc_size;
 	char	*dup;
 
 	if (!src)
 		return (NULL);
-	dup = (char *)malloc((n + 1) * sizeof(char));
+	len = ft_strlen(src);
+	if (len < n)
+	{
+		alloc_size = len;
+	} else {
+		alloc_size = n;		
+	}
+	dup = (char *)malloc((alloc_size + 1) * sizeof(char));
 	if (!dup)
 		return (NULL);
-	i = 0;
-	while (i < n && src[i])
-	{
-		dup[i] = src[i];
-		i++;
-	}
-	dup[i] = '\0';
+	ft_strlcpy(dup, src, alloc_size + 1);
+	dup[alloc_size] = '\0';
 	return (dup);
 }

@@ -1,6 +1,39 @@
 #include <unistd.h>
 #include "get_next_line.h"
 
+size_t	ft_strlen(const char *str)
+{
+	size_t	len;
+
+	if (!str)
+		return (0);
+	len = 0;
+	while (str[len] != '\0')
+	{
+		len++;
+	}
+	return (len);
+}
+
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	char	*result;
+	char	*original_address;
+
+	if (!s1 || !s2)
+		return (NULL);
+	result = (char *)malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
+	if (!result)
+		return (NULL);
+	original_address = result;
+	while (*s1)
+		*result++ = *s1++;
+	while (*s2)
+		*result++ = *s2++;
+	*result = '\0';
+	return (original_address);
+}
+
 void	*ft_memset(void *b, int c, size_t len)
 {
 	unsigned char	*ptr;
@@ -27,6 +60,7 @@ void	*ft_calloc(size_t nmemb, size_t size)
 	ft_memset(array, 0, (nmemb * size));
 	return (array);
 }
+
 /* Function to convert and print the newline character as ? */
 void	print_newline_helper(char *buffer)
 {
@@ -61,8 +95,8 @@ char	*append_buffer(char *basin_buffer, char *read_buffer)
 
 static char	*read_from_file(char *basin_buffer, int fd)
 {
-	char		*cup_buffer;
-	int			bytes_read;
+	char	*cup_buffer;
+	int		bytes_read;
 
 	cup_buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
 	if (!cup_buffer)
@@ -87,6 +121,50 @@ static char	*read_from_file(char *basin_buffer, int fd)
 	return (cup_buffer);
 }
 
+/*  */
+char	*extract_line(char *buffer)
+{
+	char *new_line = ft_strchr(buffer, '\n');
+	int	line_length;
+	char	*line;
+
+	if (new_line){
+		line_length = new_line - buffer + 1; //include the newline character
+	} else {
+		line_length = ft_strlen(buffer); // No newline, take everything
+	}
+	line = (char *)malloc(sizeof(char) * (line_length + 1));
+	if (line == NULL)
+		return (NULL);
+	strncpy(line, buffer, line_length);
+	line[line_length] = '\0';
+	return (line);
+}
+
+/* create a new buffer that starts right after the line that was extracted */
+char	*obtain_remaining(char *buffer)
+{
+	char	*newline = ft_strchr(buffer, '\n');
+	char	*remaining;
+	int		remaining_length;
+
+	if (newline){
+		remaining_length = ft_strlen(buffer) - (newline - buffer + 1);
+		remaining = (char *)malloc(sizeof(char) * remaining_length + 1));
+		if (remaining == NULL)
+			return NULL;
+		strcpy(remaining, newline + 1); //copy everything after newline
+	} else {
+		//if no newline is found, return an empty string
+		remaining = (char *)malloc(sizeof(char));
+		if (remaining == NULL)
+			return NULL;
+			*remaining = '\0';
+	}
+	free(buffer); //free the old buffer
+	return remaining;
+}
+
 /* The get_next_line function to get the next line (fish) form the file descripter */
 /* read lines from the aquarium(input file) using the cup (buffer) */
 /* aims to find and return fish(line) one at a time without disturbing rather rest of  */
@@ -101,7 +179,7 @@ char	*get_next_line(int fd)
 
 	// printf("ft_calloc#[%d]---", count++);
 	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
-		retrun (NULL);
+		return (NULL);
 	if (!basin_buffer)
 		basin_buffer = ft_calloc(1, sizeof(char));
 	if (!ft_strchr(basin_buffer,'\n'))
@@ -116,6 +194,11 @@ char	*get_next_line(int fd)
 
 #include <stdio.h>
 #include <fcntl.h>
+
+// __attribute__((destructor))
+// static void destructor() {
+//     system("leaks -q a.out");
+// }
 
 int main()
 {

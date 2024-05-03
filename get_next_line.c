@@ -6,11 +6,27 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 17:54:53 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/02 12:24:06 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/03 14:39:36 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+
+char	*ft_strchr(const char *s, int c)
+{
+	char	ch;
+
+	if (!s)
+		return (NULL);
+	ch = (char)c;
+	while (*s != ch)
+	{
+		if (*s == '\0')
+			return (NULL);
+		s++;
+	}
+	return ((char *)s);
+}
 
 size_t	ft_strlen(const char *str)
 {

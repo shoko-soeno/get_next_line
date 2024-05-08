@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 17:54:53 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/03 14:39:36 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/08 13:56:54 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,19 @@ size_t	ft_strlen(const char *str)
 		len++;
 	}
 	return (len);
+}
+
+void	*ft_calloc(size_t nmemb, size_t size)
+{
+	void	*array;
+
+	if (nmemb && size > SIZE_MAX / nmemb)
+		return (NULL);
+	array = (void *)malloc(nmemb * size);
+	if (array == NULL)
+		return (NULL);
+	ft_bzero(array, (nmemb * size));
+	return (array);
 }
 
 char	*ft_strjoin(char const *s1, char const *s2)
@@ -212,22 +225,22 @@ char	*update_line (char **buffer)
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer = NULL;
-	char		*next_line;
+	static char	*basin_buffer = NULL;
+	char		*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, NULL, 0) < 0)
 		return (NULL);
-	if (!buffer)
+	if (!basin_buffer)
 	{// 初回読み込み時(バッファが空)
-		buffer = malloc(1);  // バッファを初期化
-		if (!buffer) return NULL;
-		buffer[0] = '\0';
+		basin_buffer = ft_calloc(1);  // バッファを初期化
+		if (!basin_buffer)
+			return NULL;
 	}
 	while (true)
 	{
-		next_line = update_line(&buffer);
-		if (next_line)
-			return next_line;
+		line = update_line(&buffer);
+		if (line)
+			return line;
 		if (!read_to_buffersize(fd, &buffer))
 			break; //新しいデータの読み込みに失敗 or データの終端
 	}

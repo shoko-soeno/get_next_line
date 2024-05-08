@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 19:16:13 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/02 11:33:16 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/08 17:32:21 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,41 +101,29 @@ size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
 	return (src_len);
 }
 
-char	*ft_strdup(const char *src)
+void	*ft_memset(void *b, int c, size_t len)
 {
-	size_t	i;
-	size_t	len;
-	char	*dup;
+	unsigned char	*ptr;
 
-	len = ft_strlen(src);
-	dup = (char *)malloc((len + 1) * sizeof(char));
-	if (!dup)
+	if (b == NULL)
 		return (NULL);
-	i = -1;
-	while (++i <= len)
-		dup[i] = src[i];
-	return (dup);
+	if (len == 0)
+		return (b);
+	ptr = (unsigned char *)b;
+	while (len-- > 0)
+		*ptr++ = (unsigned char)c;
+	return (b);
 }
 
-char	*ft_strndup(const char *src, size_t n)
+void	*ft_calloc(size_t nmemb, size_t size)
 {
-	size_t	len;
-	size_t	alloc_size;
-	char	*dup;
+	void	*array;
 
-	if (!src)
+	if (nmemb && size > SIZE_MAX / nmemb)
 		return (NULL);
-	len = ft_strlen(src);
-	if (len < n)
-	{
-		alloc_size = len;
-	} else {
-		alloc_size = n;		
-	}
-	dup = (char *)malloc((alloc_size + 1) * sizeof(char));
-	if (!dup)
+	array = (void *)malloc(nmemb * size);
+	if (array == NULL)
 		return (NULL);
-	ft_strlcpy(dup, src, alloc_size + 1);
-	dup[alloc_size] = '\0';
-	return (dup);
+	ft_memset(array, 0, (nmemb * size));
+	return (array);
 }

@@ -1,77 +1,6 @@
 #include <unistd.h>
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *str)
-{
-	size_t	len;
-
-	if (!str)
-		return (0);
-	len = 0;
-	while (str[len] != '\0')
-	{
-		len++;
-	}
-	return (len);
-}
-
-char	*ft_strjoin(char const *s1, char const *s2)
-{
-	char	*result;
-	char	*original_address;
-
-	if (!s1 || !s2)
-		return (NULL);
-	result = (char *)malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
-	if (!result)
-		return (NULL);
-	original_address = result;
-	while (*s1)
-		*result++ = *s1++;
-	while (*s2)
-		*result++ = *s2++;
-	*result = '\0';
-	return (original_address);
-}
-
-void	*ft_memset(void *b, int c, size_t len)
-{
-	unsigned char	*ptr;
-
-	if (b == NULL)
-		return (NULL);
-	if (len == 0)
-		return (b);
-	ptr = (unsigned char *)b;
-	while (len-- > 0)
-		*ptr++ = (unsigned char)c;
-	return (b);
-}
-
-void	*ft_calloc(size_t nmemb, size_t size)
-{
-	void	*array;
-
-	if (nmemb && size > SIZE_MAX / nmemb)
-		return (NULL);
-	array = (void *)malloc(nmemb * size);
-	if (array == NULL)
-		return (NULL);
-	ft_memset(array, 0, (nmemb * size));
-	return (array);
-}
-
-/* Function to convert and print the newline character as ? */
-void	print_newline_helper(char *buffer)
-{
-	while (*buffer && *buffer != '\0')
-	{
-		if (*buffer == '\n')
-			*buffer = '\\';
-		printf("%c", *buffer);
-		buffer++;
-	}
-}
 /* Function to append the read buffer data to the partial content (line). */
 /* The explorer (get_next_line) adds a scoop of water (read buffer) to */
 /* the current cup(line) */
@@ -101,68 +30,66 @@ static char	*read_from_file(char *basin_buffer, int fd)
 	cup_buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
 	if (!cup_buffer)
 		return (NULL);
-	bytes_read = 1;
-	while (bytes_read > 0)
+	while ((bytes_read = read(fd, cup_buffer, BUFFER_SIZE)) > 0)
+	//EOFまでループが回る。readがfdからcup_bufferへのデータを読み込む過程は、
+	//ファイルの読み込み位置（ファイルポインタ）をもとに動作する。
+	//readを連続して呼び出すとファイルポインタが自動的に更新され、読み込んだバイト数
+	//だけ前進する。
 	{
-		bytes_read = read(fd, cup_buffer, BUFFER_SIZE);
-		if(bytes_read == -1)
-			return (free(cup_buffer), NULL);
-		cup_buffer[bytes_read] = '\0';
+		cup_buffer[bytes_read] = '\0';//read関数はnull終端を行わないため追加
 		basin_buffer = append_buffer(basin_buffer, cup_buffer);
+		//cupからbasinに追加した新しい文字列を生成
+		//basin_bufferにあった古いメモリを解放後、新しいメモリを割り当てる。
 		if (ft_strchr(basin_buffer, '\n'))
-			break ;
-		free (cup_buffer);
-		return (basin_buffer);
+			break ; //改行を見つけたらそれ以上読み込む必要がない。
 	}
-	read(fd, cup_buffer, BUFFER_SIZE);
-	print_newline_helper(cup_buffer);
-	if (bytes_read <= 0)
-		return (free(cup_buffer), NULL);
-	return (cup_buffer);
+	//EOFが来た時に、whileループが終了、cupが解放される
+	free(cup_buffer);
+	if (bytes_read == -1)
+		return (free(basin_buffer), NULL);
+	return (basin_buffer);
 }
+//read関数がゼロを返す＝EOF
 
 /*  */
 char	*extract_line(char *buffer)
 {
-	char *new_line = ft_strchr(buffer, '\n');
-	int	line_length;
+	char	*endl;
+	int		line_length;
 	char	*line;
 
-	if (new_line){
-		line_length = new_line - buffer + 1; //include the newline character
-	} else {
+	endl = ft_strchr(buffer, '\n');
+	if (endl)
+		line_length = endl - buffer + 1; //include the newline character
+	else
 		line_length = ft_strlen(buffer); // No newline, take everything
-	}
-	line = (char *)malloc(sizeof(char) * (line_length + 1));
+	line = (char *)ft_calloc(line_length + 1, sizeof(char));
 	if (line == NULL)
 		return (NULL);
-	strncpy(line, buffer, line_length);
-	line[line_length] = '\0';
+	ft_strlcpy(line, buffer, line_length + 1); //pass the size including the null terminator
 	return (line);
 }
 
 /* create a new buffer that starts right after the line that was extracted */
 char	*obtain_remaining(char *buffer)
 {
-	char	*newline = ft_strchr(buffer, '\n');
+	char	*endl = ft_strchr(buffer, '\n'); //最初の改行文字（'\n'）を指すポインタを保持
 	char	*remaining;
 	int		remaining_length;
 
-	if (newline){
-		remaining_length = ft_strlen(buffer) - (newline - buffer + 1);
-		remaining = (char *)malloc(sizeof(char) * remaining_length + 1));
+	if (endl){
+		remaining_length = ft_strlen(endl + 1); //改行の次の文字からの文字数をカウント
+		remaining = (char *)ft_calloc(remaining_length + 1, sizeof(char));
 		if (remaining == NULL)
-			return NULL;
-		strcpy(remaining, newline + 1); //copy everything after newline
+			return (free(buffer), NULL);
+		ft_strlcpy(remaining, endl + 1, remaining_length + 1); //copy everything after newline
 	} else {
-		//if no newline is found, return an empty string
-		remaining = (char *)malloc(sizeof(char));
+		//if no newline is found, allocate memory for the empty string
+		remaining = (char *)ft_calloc(1, sizeof(char));
 		if (remaining == NULL)
-			return NULL;
-			*remaining = '\0';
+			return(free(buffer), NULL);
 	}
-	free(buffer); //free the old buffer
-	return remaining;
+	return (free(buffer), remaining);  //free the old buffer
 }
 
 /* The get_next_line function to get the next line (fish) form the file descripter */
@@ -175,30 +102,37 @@ char	*get_next_line(int fd)
 {
 	static char	*basin_buffer;
 	char		*line;
-	// static int	count = 1;
+	char		*temp;
 
-	// printf("ft_calloc#[%d]---", count++);
 	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
 	if (!basin_buffer)
-		basin_buffer = ft_calloc(1, sizeof(char));
-	if (!ft_strchr(basin_buffer,'\n'))
-		basin_buffer = read_from_file(basin_buffer, fd);
+		basin_buffer = ft_calloc(1, sizeof(char)); //初回読み込み時に初期化
+	while (!ft_strchr(basin_buffer,'\n')) //改行が含まれていなければさらにデータを読み込む
+	{
+		temp = read_from_file(basin_buffer, fd);
+		//basin_bufferに少なくとも1つの完全な行が含まれるまで繰り返される
+		if (!temp)
+			break;
+		basin_buffer = temp;
+	}
 	if (!basin_buffer)
 		return (free(basin_buffer), NULL);
-	line = extract_line(basin_buffer);
-	basin_buffer = obtain_remaining(basin_buffer);
+	line = extract_line(basin_buffer); //basin_bufferから1行を抽出
+	basin_buffer = obtain_remaining(basin_buffer); //抽出後に残った文字列を再度basin_bufferに保存
+	if(!*basin_buffer)
+		free(basin_buffer);
+		basin_buffer = NULL;
 	return (line);
 }
-
 
 #include <stdio.h>
 #include <fcntl.h>
 
-// __attribute__((destructor))
-// static void destructor() {
-//     system("leaks -q a.out");
-// }
+__attribute__((destructor))
+static void destructor() {
+    system("leaks -q a.out");
+}
 
 int main()
 {

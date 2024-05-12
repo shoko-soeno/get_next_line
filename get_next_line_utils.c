@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 19:16:13 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/08 17:32:21 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/12 21:03:00 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	while (*s2)
 		*result++ = *s2++;
 	*result = '\0';
+	free((char *)s1);
+	//free((char *)s2);
 	return (original_address);
 }
 

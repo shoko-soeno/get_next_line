@@ -6,273 +6,145 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 17:54:53 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/08 13:56:54 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/12 21:13:21 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <unistd.h>
 #include "get_next_line.h"
 
-char	*ft_strchr(const char *s, int c)
+static char	*read_from_file(char *basin_buffer, int *fd)
 {
-	char	ch;
+	char	*cup_buffer;
+	int		bytes_read;
 
-	if (!s)
+	cup_buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+	if (!cup_buffer)
 		return (NULL);
-	ch = (char)c;
-	while (*s != ch)
+	bytes_read = read(*fd, cup_buffer, BUFFER_SIZE);
+	if (bytes_read == 0) //EOFが来たシグナルとしてfd=-1を返す
+		return (*fd = -1, basin_buffer);
+	cup_buffer[bytes_read] = '\0';//read関数はnull終端を行わないため追加
+	basin_buffer = ft_strjoin(basin_buffer, cup_buffer);
+	while (!ft_strchr(basin_buffer, '\n') && (bytes_read = read(*fd, cup_buffer, BUFFER_SIZE)) > 0)
 	{
-		if (*s == '\0')
-			return (NULL);
-		s++;
+		cup_buffer[bytes_read] = '\0';//read関数はnull終端を行わないため追加
+		basin_buffer = ft_strjoin(basin_buffer, cup_buffer);
+		if (ft_strchr(basin_buffer, '\n'))
+			break ;
 	}
-	return ((char *)s);
+	if (bytes_read == 0) //EOFが来たシグナルとしてfd=-1とする
+		*fd = -1;
+	free(cup_buffer);
+	if (bytes_read == -1)
+		return (free(basin_buffer), NULL);
+	return (basin_buffer);
 }
 
-size_t	ft_strlen(const char *str)
+char	*extract_line(char *buffer)
 {
-	size_t	len;
+	char	*endl;
+	int		line_length;
+	char	*line;
 
-	if (!str)
-		return (0);
-	len = 0;
-	while (str[len] != '\0')
-	{
-		len++;
-	}
-	return (len);
-}
-
-void	*ft_calloc(size_t nmemb, size_t size)
-{
-	void	*array;
-
-	if (nmemb && size > SIZE_MAX / nmemb)
+	endl = ft_strchr(buffer, '\n');
+	if (endl)
+		line_length = endl - buffer;
+	else
+		line_length = ft_strlen(buffer); // No newline, take everything
+	line = (char *)ft_calloc(line_length + 1, sizeof(char));
+	if (line == NULL)
 		return (NULL);
-	array = (void *)malloc(nmemb * size);
-	if (array == NULL)
-		return (NULL);
-	ft_bzero(array, (nmemb * size));
-	return (array);
-}
-
-char	*ft_strjoin(char const *s1, char const *s2)
-{
-	char	*result;
-	char	*original_address;
-
-	if (!s1 || !s2)
-		return (NULL);
-	result = (char *)malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
-	if (!result)
-		return (NULL);
-	original_address = result;
-	while (*s1)
-		*result++ = *s1++;
-	while (*s2)
-		*result++ = *s2++;
-	*result = '\0';
-	return (original_address);
-}
-
-size_t	ft_strlcat(char *dst, const char *src, size_t dstsize)
-{
-	size_t	dst_len;
-	size_t	i;
-
-	dst_len = 0;
-	if (dst)
-		dst_len = ft_strlen(dst);
-	if (dstsize <= dst_len || dstsize == 0)
-		return (dstsize + ft_strlen(src));
-	i = 0;
-	while (src[i] != '\0' && dst_len + i < dstsize - 1)
-	{
-		dst[dst_len + i] = src[i];
-		i++;
-	}
-	if (dst_len < dstsize)
-		dst[dst_len + i] = '\0';
-	return (dst_len + ft_strlen(src));
-}
-
-char	*ft_strchr(const char *s, int c)
-{
-	char	ch;
-
-	if (!s)
-		return (NULL);
-	ch = (char)c;
-	while (*s != ch)
-	{
-		if (*s == '\0')
-			return (NULL);
-		s++;
-	}
-	return ((char *)s);
-}
-
-size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
-{
-	size_t	i;
-	size_t	src_len;
-
-	i = 0;
-	src_len = ft_strlen(src);
-	if (dstsize != 0)
-	{
-		while (src [i] != '\0' && i < (dstsize - 1))
-		{
-			dst[i] = src[i];
-			i++;
-		}
-		dst[i] = '\0';
-	}
-	return (src_len);
-}
-
-char	*ft_strdup(const char *src)
-{
-	size_t	i;
-	size_t	len;
-	char	*dup;
-
-	len = ft_strlen(src);
-	dup = (char *)malloc((len + 1) * sizeof(char));
-	if (!dup)
-		return (NULL);
-	i = -1;
-	while (++i <= len)
-		dup[i] = src[i];
-	return (dup);
-}
-
-char	*ft_strndup(const char *src, size_t n)
-{
-	size_t	i;
-	char	*dup;
-
-	if (!src)
-		return (NULL);
-	dup = (char *)malloc((n + 1) * sizeof(char));
-	if (!dup)
-		return (NULL);
-	i = 0;
-	while (i < n && src[i])
-	{
-		dup[i] = src[i];
-		i++;
-	}
-	dup[i] = '\0';
-	return (dup);
-}
-
-bool	read_to_buffersize(int fd, char **buffer)
-{
-	size_t	read_bytes;
-	char	temp_buffer[BUFFER_SIZE + 1];
-	char	*new_buffer;
-	
-	read_bytes = read(fd, temp_buffer, BUFFER_SIZE);
-	if (read_bytes <= 0)
-		return (false);
-	temp_buffer[read_bytes] = '\0';
-	if(*buffer)
-	{
-		new_buffer = ft_strjoin(*buffer, temp_buffer);
-		free(*buffer);
-		if (!new_buffer)
-			return (false);
-		*buffer = new_buffer;
-	} else {
-		*buffer = ft_strdup(temp_buffer);
-		if (!*buffer)
-			return (false);
-	}
-	return (true);
-}
-
-char	*update_line (char **buffer)
-{
-	char	*line; //バッファ内のデータを先頭から改行文字 (\n) まで、またはバッファの終端までの文字列を格納
-	char	*leftover_str; //抽出された行の次に続くバッファの残りの部分
-	// char	*endl_position;
-	int		i;
-
-	// if (buffer == NULL) {
-	// 	printf("buffer is NULL\n");
-	// } else if (*buffer == NULL) {
-	// 	printf("*buffer is NULL\n");
-	// } else if (**buffer == '\0') {
-	// 	printf("**buffer is '\\0'\n");
-	// }
-	i = 0;
-	if(!*buffer || **buffer == '\0')
-		return (NULL);
-	while ((*buffer)[i] && (*buffer)[i] != '\n')
-		i++;
-	if ((*buffer)[i] == '\n')
-	{
-		line = ft_strndup(*buffer, i + 1); //改行を含めた文字をコピー
-		leftover_str = ft_strdup(*buffer + i + 1); //改行の次の文字からコピー
-	} else { //改行がないがデータが残っている場合
-		line = ft_strdup(*buffer);
-		leftover_str = NULL;
-	}
-	free(*buffer); //古いbufferを解放
-	*buffer = leftover_str; //leftoverで置き換え
+	ft_strlcpy(line, buffer, line_length + 1); //pass the size including the null terminator
 	return (line);
+}
+
+char	*obtain_remaining(char *buffer)
+{
+	char	*endl = ft_strchr(buffer, '\n');
+	char	*remaining;
+	int		remaining_length;
+
+	if (endl){
+		remaining_length = ft_strlen(endl + 1);
+		remaining = (char *)ft_calloc(remaining_length + 1, sizeof(char));
+		if (remaining == NULL)
+			return (free(buffer), NULL);
+		ft_strlcpy(remaining, endl + 1, remaining_length + 1);
+	} else {
+		remaining = (char *)ft_calloc(1, sizeof(char));
+		if (remaining == NULL)
+			return(free(buffer), NULL);
+	}
+	return (free(buffer), remaining);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*basin_buffer = NULL;
+	static char	*basin_buffer;
 	char		*line;
+	char		*temp;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, NULL, 0) < 0)
+	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
 	if (!basin_buffer)
-	{// 初回読み込み時(バッファが空)
-		basin_buffer = ft_calloc(1);  // バッファを初期化
-		if (!basin_buffer)
-			return NULL;
-	}
-	while (true)
+		basin_buffer = ft_calloc(1, sizeof(char));
+	while (!ft_strchr(basin_buffer,'\n'))
 	{
-		line = update_line(&buffer);
-		if (line)
-			return line;
-		if (!read_to_buffersize(fd, &buffer))
-			break; //新しいデータの読み込みに失敗 or データの終端
+		temp = read_from_file(basin_buffer, &fd);
+		if (!temp || *temp == '\0')
+		{
+			if (basin_buffer || !*basin_buffer){
+				free(basin_buffer);
+				return (NULL);
+			}
+			break;
+		}
+		basin_buffer = temp;
+		if (fd == -1)
+			break;
 	}
-	if (!buffer || *buffer == '\0')
+	if (!basin_buffer)
 		return (NULL);
-	next_line = ft_strdup(buffer);
-	free(buffer);
-	buffer = NULL; //ポインタがどこも指さない状態（ヌルポインタ）にする。
-	return (next_line);
-}
-
-__attribute__((destructor)) static void destructor()
-{
-    system("leaks -q a.out");
-}
-int	main(void)
-{
-	char	*line;
-	int		fd;
-	int		line_number = 1;
-
-	fd = open("test.txt", O_RDONLY); // Open the file 'test.txt' from the 'tests' directory
-	if (fd == -1) {
-		printf("%s", "Error opening file");
-		return (1);
+	line = extract_line(basin_buffer);
+	basin_buffer = obtain_remaining(basin_buffer);
+	if(!basin_buffer || !*basin_buffer){
+		free(basin_buffer);
+		basin_buffer = NULL;
 	}
-
-	while ((line = get_next_line(fd)) != NULL) { // Read until there are no more lines
-		printf("line [%02d]: %s", line_number++, line);
-		free(line); // Free the line after printing to avoid memory leaks
-	}
-
-	close(fd); // Close the file descriptor
-	return (0);
+	return (line);
 }
+
+// #include <stdio.h>
+// #include <fcntl.h>
+// __attribute__((destructor))
+// static void destructor() {
+//     system("leaks -q a.out");
+// }
+
+// int main()
+// {
+// 	int		fd;
+// 	char	*next_line;
+// 	int		count;
+
+// 	count = 0;
+// 	fd = open("example.txt", O_RDONLY);
+// 	if (fd == -1)
+// 	{
+// 		printf("Error opening file");
+// 		return (1);
+// 	}
+// 	while (1)
+// 	{
+// 		next_line = get_next_line(fd);
+// 		if (next_line == NULL)
+// 			break ;
+// 		count++;
+// 		printf("[%d]:%s\n", count, next_line);
+// 		free(next_line);
+// 		next_line = NULL;
+// 	}
+// 	close(fd);
+// 	return (0);
+// }

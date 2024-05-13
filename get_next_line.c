@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/29 17:54:53 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/12 21:13:21 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/13 19:09:04 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@ static char	*read_from_file(char *basin_buffer, int *fd)
 	int		bytes_read;
 
 	cup_buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-	if (!cup_buffer)
-		return (NULL);
+	// if (!cup_buffer)
+	// 	return (NULL);
 	bytes_read = read(*fd, cup_buffer, BUFFER_SIZE);
 	if (bytes_read == 0) //EOFが来たシグナルとしてfd=-1を返す
 		return (*fd = -1, basin_buffer);

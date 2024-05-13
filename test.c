@@ -11,7 +11,11 @@ static char	*read_from_file(char *basin_buffer, int *fd)
 		return (NULL);
 	bytes_read = read(*fd, cup_buffer, BUFFER_SIZE);
 	if (bytes_read == 0) //EOFが来たシグナルとしてfd=-1を返す
-		return (*fd = -1, basin_buffer);
+	{
+		*fd = -1;
+		free(cup_buffer); //ここが2leaksの原因だった。
+		return(basin_buffer);
+	}
 	cup_buffer[bytes_read] = '\0';//read関数はnull終端を行わないため追加
 	basin_buffer = ft_strjoin(basin_buffer, cup_buffer);
 	while (!ft_strchr(basin_buffer, '\n') && (bytes_read = read(*fd, cup_buffer, BUFFER_SIZE)) > 0)
@@ -82,9 +86,7 @@ char	*get_next_line(int fd)
 		basin_buffer = ft_calloc(1, sizeof(char)); //初回読み込み時に初期化
 	while (!ft_strchr(basin_buffer,'\n')) //改行が含まれていなければデータを読み込む
 	{
-		// printf("Debug: before read_from_file function: '%s'\n", basin_buffer);
 		temp = read_from_file(basin_buffer, &fd);
-		// printf("%p, %s\n", &temp, temp);
 		if (!temp || *temp == '\0')
 		{
 			if (basin_buffer || !*basin_buffer){
@@ -99,7 +101,6 @@ char	*get_next_line(int fd)
 	}
 	if (!basin_buffer)
 		return (NULL);
-	// printf("Debug before obtain_remaining: %s\n", basin_buffer);
 	line = extract_line(basin_buffer);
 	basin_buffer = obtain_remaining(basin_buffer);
 	if(!basin_buffer || !*basin_buffer){
@@ -129,9 +130,17 @@ int main()
 		printf("Error opening file");
 		return (1);
 	}
-	while (1)
+	while (count < 3)
 	{
 		next_line = get_next_line(fd);
+		// next_line = (char *)malloc(sizeof(char) * 6);
+		// int i = 0;
+		// while (i < 5)
+		// {
+		// 	next_line[i] = 'a';
+		// 	i++;
+		// }
+		// next_line[i] = '\0';
 		if (next_line == NULL)
 			break ;
 		count++;
@@ -140,5 +149,7 @@ int main()
 		next_line = NULL;
 	}
 	close(fd);
+
+	// system("leaks a.out");
 	return (0);
 }

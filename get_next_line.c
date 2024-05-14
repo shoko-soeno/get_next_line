@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/14 20:02:36 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/14 20:38:03 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/14 21:00:42 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void	read_from_file(char **basin, int fd)
 	red = read(fd, cup, BUFFER_SIZE);
 	while (red > 0)
 	{
-		cup[red] = '\0';//read関数はnull終端を行わないため追加
+		cup[red] = '\0';
 		*basin = ft_strjoin(*basin, cup);
 		if (ft_strchr(*basin, '\n'))
 			break ;
@@ -89,11 +89,7 @@ char	*get_next_line(int fd)
 	static char	*basin;
 
 	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
-	{
-		// free(basin);
-		// basin = NULL;
 		return (NULL);
-	}	
 	if (!basin)
 		basin = ft_calloc(1, sizeof(char));
 	read_from_file(&basin, fd);
@@ -102,40 +98,44 @@ char	*get_next_line(int fd)
 	line = extract_line(basin);
 	basin = obtain_remaining(basin);
 	if (!line && !basin)
-		return (free(basin), NULL);
+	{
+		free(basin);
+		basin = NULL;
+		return (NULL);
+	}
 	return (line);
 }
-// #include <stdio.h>
-// #include <fcntl.h>
-// __attribute__((destructor))
-// static void destructor() {
-//     system("leaks -q a.out");
-// }
+#include <stdio.h>
+#include <fcntl.h>
+__attribute__((destructor))
+static void destructor() {
+    system("leaks -q a.out");
+}
 
-// int main()
-// {
-// 	int     fd;
-// 	char    *next_line;
-// 	int     count;
+int main()
+{
+	int     fd;
+	char    *next_line;
+	int     count;
 
-// 	count = 0;
-// 	fd = open("example.txt", O_RDONLY);
-// 	if (fd == -1)
-// 	{
-// 		printf("%s", "Error opening file");
-// 		return (1);
-// 	}
-// 	while (1)
-// 	{
-// 		next_line = get_next_line(fd);
-// 		if (next_line == NULL)
-// 			break ;
-// 		count++;
-// 		printf("[%d]:%s\n", count, next_line);
-// 		free(next_line);
-// 		next_line = NULL;
-// 	}
-// 	close(fd);
-// 	// system("leaks a.out");
-// 	return (0);
-// }
+	count = 0;
+	fd = open("example.txt", O_RDONLY);
+	if (fd == -1)
+	{
+		printf("%s", "Error opening file");
+		return (1);
+	}
+	while (1)
+	{
+		next_line = get_next_line(fd);
+		if (next_line == NULL)
+			break ;
+		count++;
+		printf("[%d]:%s\n", count, next_line);
+		free(next_line);
+		next_line = NULL;
+	}
+	close(fd);
+	// system("leaks a.out");
+	return (0);
+}

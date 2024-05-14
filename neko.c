@@ -6,6 +6,8 @@ void	read_from_file(char **basin, int fd)
 	char	*cup;
 	int		red;
 
+	if (!*basin)
+		*basin = ft_calloc(1,1);
 	cup = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
 	if (!cup){
 		free(*basin);
@@ -13,10 +15,6 @@ void	read_from_file(char **basin, int fd)
 		return ;
 	}
 	red = read(fd, cup, BUFFER_SIZE);
-	// if (!*basin)
-	// 	*basin = ft_calloc(1,1);
-	// cup[red] = '\0';//read関数はnull終端を行わないため追加
-	// *basin = ft_strjoin(*basin, cup);
 	while (red > 0)
 	{
 		cup[red] = '\0';//read関数はnull終端を行わないため追加
@@ -29,15 +27,17 @@ void	read_from_file(char **basin, int fd)
 	return ;
 }
 
-char	*extract_line(char *buffer)
+char    *extract_line(char *buffer)
 {
-	char	*endl;
-	int		line_length;
-	char	*line;
+	char    *endl;
+	int     line_length;
+	char    *line;
 
+	if (!*buffer)
+		return (NULL);
 	endl = ft_strchr(buffer, '\n');
 	if (endl)
-		line_length = endl - buffer;
+		line_length = endl - buffer + 1; //改行含めるなら+1
 	else
 		line_length = ft_strlen(buffer); // No newline, take everything
 	line = (char *)ft_calloc(line_length + 1, sizeof(char));
@@ -47,73 +47,65 @@ char	*extract_line(char *buffer)
 	return (line);
 }
 
-char	*obtain_remaining(char *buffer)
+char    *obtain_remaining(char *buffer)
 {
-	char	*endl;
-	char	*remaining;
-	int		remaining_length;
+	char    *endl;
+	char    *remaining;
+	int     remaining_length;
 
 	endl = ft_strchr(buffer, '\n');
-	if (endl)
-	{
+	if (!endl){
+		free(buffer);
+		return (NULL);
+	} else {
 		remaining_length = ft_strlen(endl + 1);
 		remaining = (char *)ft_calloc(remaining_length + 1, sizeof(char));
-		if (remaining == NULL)
-			return (free(buffer), NULL);
+		// if (remaining == NULL)
+		// 	return (free(buffer), NULL);
 		ft_strlcpy(remaining, endl + 1, remaining_length + 1); //copy everything after endl
-	} else {
-		//if no newline is found, allocate memory for the empty string
-		remaining = (char *)ft_calloc(1, sizeof(char));
-		if (remaining == NULL)
-			return(free(buffer), NULL);
 	}
 	return (free(buffer), remaining);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*basin;
 	char		*line;
-	char		*cup;
+	static char	*basin;
 
-	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
+	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0){
+		// free(basin);
+		// basin = NULL;
 		return (NULL);
-	// if (!basin)
-	// 	basin = ft_calloc(1, sizeof(char)); //初回読み込み時に初期化
-	cup = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if(!tmp)
-		retrun (0);
-	while (!ft_strchr(basin,'\n')) //改行が含まれていなければデータを読み込む
-	{
-		read_from_file(&basin, fd);
-		if (!basin || !*basin)
-			return (free(basin), NULL);
-	}
+	}	
+	if (!basin)
+		basin = ft_calloc(1, sizeof(char));
+	read_from_file(&basin, fd);
 	if (!basin)
 		return (NULL);
 	line = extract_line(basin);
 	basin = obtain_remaining(basin);
-	if(!basin || !*basin){
-		free(basin);
-		basin = NULL;
-	}
-	printf("basin;%s\n", basin);
-	printf("line;%s\n", line);
+	if (!line && !basin)
+		return (free(basin), NULL);
+	// if(!basin || !*basin || !line)
+	// {
+	// 	free(basin);
+	// 	basin = NULL;
+	// 	return (NULL);
+	// }
 	return (line);
 }
-
-// #include <stdio.h>
-// #include <fcntl.h>
-// __attribute__((destructor))
-// static void destructor() {
-//     system("leaks -q a.out");
-// }
+#include <stdio.h>
+#include <fcntl.h>
+__attribute__((destructor))
+static void destructor() {
+    system("leaks -q a.out");
+}
 
 int main()
 {
-	int		fd;
-	char	*next_line;
-	int		count;
+	int     fd;
+	char    *next_line;
+	int     count;
 
 	count = 0;
 	fd = open("example.txt", O_RDONLY);

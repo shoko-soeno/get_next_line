@@ -6,7 +6,7 @@
 /*   By: ssoeno <ssoeno@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/14 20:02:36 by ssoeno            #+#    #+#             */
-/*   Updated: 2024/05/14 20:04:54 by ssoeno           ###   ########.fr       */
+/*   Updated: 2024/05/14 20:38:03 by ssoeno           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,10 @@ void	read_from_file(char **basin, int fd)
 	int		red;
 
 	if (!*basin)
-		*basin = ft_calloc(1,1);
+		*basin = ft_calloc(1, 1);
 	cup = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-	if (!cup){
+	if (!cup)
+	{
 		free(*basin);
 		*basin = NULL;
 		return ;
@@ -39,23 +40,23 @@ void	read_from_file(char **basin, int fd)
 	return ;
 }
 
-char    *extract_line(char *buffer)
+char	*extract_line(char *buffer)
 {
-	char    *endl;
-	int     line_length;
-	char    *line;
+	char	*endl;
+	int		line_length;
+	char	*line;
 
 	if (!*buffer)
 		return (NULL);
 	endl = ft_strchr(buffer, '\n');
 	if (endl)
-		line_length = endl - buffer; //改行含めるなら+1
+		line_length = endl - buffer;
 	else
-		line_length = ft_strlen(buffer); // No newline, take everything
+		line_length = ft_strlen(buffer);
 	line = (char *)ft_calloc(line_length + 1, sizeof(char));
 	if (line == NULL)
 		return (NULL);
-	ft_strlcpy(line, buffer, line_length + 1); //pass the size including the null terminator
+	ft_strlcpy(line, buffer, line_length + 1);
 	return (line);
 }
 
@@ -66,15 +67,18 @@ char	*obtain_remaining(char *buffer)
 	int		remaining_length;
 
 	endl = ft_strchr(buffer, '\n');
-	if (!endl){
+	if (!endl)
+	{
 		free(buffer);
 		return (NULL);
-	} else {
+	}
+	else
+	{
 		remaining_length = ft_strlen(endl + 1);
 		remaining = (char *)ft_calloc(remaining_length + 1, sizeof(char));
 		// if (remaining == NULL)
 		// 	return (free(buffer), NULL);
-		ft_strlcpy(remaining, endl + 1, remaining_length + 1); //copy everything after endl
+		ft_strlcpy(remaining, endl + 1, remaining_length + 1);
 	}
 	return (free(buffer), remaining);
 }
@@ -84,7 +88,8 @@ char	*get_next_line(int fd)
 	char		*line;
 	static char	*basin;
 
-	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0){
+	if (fd < 0 || read(fd, NULL, 0) < 0 || BUFFER_SIZE <= 0)
+	{
 		// free(basin);
 		// basin = NULL;
 		return (NULL);
@@ -98,45 +103,39 @@ char	*get_next_line(int fd)
 	basin = obtain_remaining(basin);
 	if (!line && !basin)
 		return (free(basin), NULL);
-	// if(!basin || !*basin || !line)
-	// {
-	// 	free(basin);
-	// 	basin = NULL;
-	// 	return (NULL);
-	// }
 	return (line);
 }
-#include <stdio.h>
-#include <fcntl.h>
-__attribute__((destructor))
-static void destructor() {
-    system("leaks -q a.out");
-}
+// #include <stdio.h>
+// #include <fcntl.h>
+// __attribute__((destructor))
+// static void destructor() {
+//     system("leaks -q a.out");
+// }
 
-int main()
-{
-	int     fd;
-	char    *next_line;
-	int     count;
+// int main()
+// {
+// 	int     fd;
+// 	char    *next_line;
+// 	int     count;
 
-	count = 0;
-	fd = open("example.txt", O_RDONLY);
-	if (fd == -1)
-	{
-		printf("%s", "Error opening file");
-		return (1);
-	}
-	while (1)
-	{
-		next_line = get_next_line(fd);
-		if (next_line == NULL)
-			break ;
-		count++;
-		printf("[%d]:%s\n", count, next_line);
-		free(next_line);
-		next_line = NULL;
-	}
-	close(fd);
-	// system("leaks a.out");
-	return (0);
-}
+// 	count = 0;
+// 	fd = open("example.txt", O_RDONLY);
+// 	if (fd == -1)
+// 	{
+// 		printf("%s", "Error opening file");
+// 		return (1);
+// 	}
+// 	while (1)
+// 	{
+// 		next_line = get_next_line(fd);
+// 		if (next_line == NULL)
+// 			break ;
+// 		count++;
+// 		printf("[%d]:%s\n", count, next_line);
+// 		free(next_line);
+// 		next_line = NULL;
+// 	}
+// 	close(fd);
+// 	// system("leaks a.out");
+// 	return (0);
+// }
